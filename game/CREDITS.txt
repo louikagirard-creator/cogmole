@@ -1,0 +1,39 @@
+Strike City audio — all sources are CC0 (public domain) from OpenGameArt.org
+
+roll.mp3  <=  sfx/qubodup-bowling-roll/qubodup-bowling-roll/qubodup-bowling_roll-nofadeout.ogg
+whoosh.mp3  <=  sfx/swishes/swishes/swish-3.wav
+hit1.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_hit_01.ogg
+hit2.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_hit_05.ogg
+hit3.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_hit_10.ogg
+crash1.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_rock_breaking_01.ogg
+crash2.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_rock_breaking_02.ogg
+crash3.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_breaking_01.ogg
+crumble1.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_rock_falling_02.ogg
+crumble2.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_rock_falling_05.ogg
+brick1.mp3  <=  sfx/bricks_3/bricks/Brick 01.wav
+brick2.mp3  <=  sfx/bricks_3/bricks/Brick 03.wav
+brick3.mp3  <=  sfx/bricks_3/bricks/Brick 05.wav
+brick4.mp3  <=  sfx/bricks_3/bricks/Brick 08.wav
+wood1.mp3  <=  sfx/independent_nu_ljudbank-wood_crack_hit_destruction/wood_impact/crack02.mp3.flac
+wood2.mp3  <=  sfx/independent_nu_ljudbank-wood_crack_hit_destruction/wood_impact/impactwood05.mp3.flac
+glass1.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_glass_breaking_01.ogg
+glass2.mp3  <=  sfx/sfx_breaking_and_falling/bfh1_glass_breaking_03.ogg
+boom.mp3  <=  sfx/25-CC0-bang-sfx/bang_03.ogg
+firework.mp3  <=  sfx/25-CC0-bang-sfx/fw_02.ogg
+pop1.mp3  <=  sfx/3pops/3pops/pop1.ogg
+pop2.mp3  <=  sfx/3pops/3pops/pop2.ogg
+pop3.mp3  <=  sfx/3pops/3pops/pop3.ogg
+click.mp3  <=  sfx/kenney_interfaceSounds/Audio/click_002.ogg
+confirm.mp3  <=  sfx/kenney_interfaceSounds/Audio/confirmation_002.ogg
+back.mp3  <=  sfx/kenney_interfaceSounds/Audio/back_002.ogg
+star1.mp3  <=  sfx/kenney_interfaceSounds/Audio/confirmation_001.ogg
+star2.mp3  <=  sfx/kenney_interfaceSounds/Audio/confirmation_003.ogg
+star3.mp3  <=  sfx/kenney_interfaceSounds/Audio/confirmation_004.ogg
+fail.mp3  <=  sfx/kenney_interfaceSounds/Audio/error_004.ogg
+unlock.mp3  <=  sfx/kenney_interfaceSounds/Audio/maximize_006.ogg
+music_menu.mp3  <=  music/funkymenu.mp3
+music_game.mp3  <=  music/funkyhouse.mp3
+jingle_win.mp3  <=  music/victory.mp3
+
+Music: "Funky House" by Of Far Different Nature, "Funky Menu Loop" by iamoneabe, "Funky Victory Loop" by Archonic (all CC0).
+SFX: "75 CC0 breaking/falling/hit sfx" (rubberduck), "35 wooden cracks" (independent.nu), "Lego Bricks", "Swishes", "3 Pop Sounds", "25 CC0 bang/firework", "Bowling Ball Rolling" (qubodup), "Interface Sounds" (Kenney). All CC0.

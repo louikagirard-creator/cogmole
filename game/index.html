@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Strike City</title>
+<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+<style>
+@font-face { font-family: 'Lilita One'; src: url('fonts/lilita-one.woff2') format('woff2'); font-display: block; }
+@font-face { font-family: 'Nunito'; font-weight: 800; src: url('fonts/nunito-800.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Nunito'; font-weight: 900; src: url('fonts/nunito-900.woff2') format('woff2'); font-display: swap; }
+:root { --ink: #1d2340; --stroke: #1d2340; --green: #3fd16b; --green-d: #23a24b; --orange: #ff9a2e; --orange-d: #d86c0a; --blue: #3fa9ff; --blue-d: #1e78d1; --pink: #ff5d8f; --gold: #ffd23f; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #9fd8ff; touch-action: none; overscroll-behavior: none; }
+body { font-family: 'Nunito', system-ui, sans-serif; color: #fff; }
+canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+.ui { position: fixed; inset: 0; pointer-events: none; }
+.ui .layer { position: absolute; inset: 0; display: none; }
+.ui .layer.on { display: block; }
+.ui button, .ui .clickable { pointer-events: auto; cursor: pointer; }
+.title-font { font-family: 'Lilita One', 'Nunito', sans-serif; font-weight: 400; letter-spacing: 0.02em; }
+.outline { -webkit-text-stroke: 0; text-shadow: 0 3px 0 var(--stroke), 2px 2px 0 var(--stroke), -2px 2px 0 var(--stroke), 2px -2px 0 var(--stroke), -2px -2px 0 var(--stroke), 0 6px 12px rgba(0,0,0,0.25); }
+
+/* buttons */
+.btn { font-family: 'Lilita One', sans-serif; font-size: 26px; color: #fff; border: 0; border-radius: 18px; padding: 14px 30px 16px; position: relative;
+  background: linear-gradient(#5fe388, var(--green)); box-shadow: 0 6px 0 var(--green-d), 0 10px 18px rgba(0,0,0,0.25); text-shadow: 0 2px 0 rgba(0,0,0,0.25);
+  transition: transform .08s ease, box-shadow .08s ease, filter .15s; outline: none; letter-spacing: 0.03em; }
+.btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
+.btn:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--green-d), 0 4px 8px rgba(0,0,0,0.2); }
+.btn.orange { background: linear-gradient(#ffb75e, var(--orange)); box-shadow: 0 6px 0 var(--orange-d), 0 10px 18px rgba(0,0,0,0.25); }
+.btn.orange:active { box-shadow: 0 1px 0 var(--orange-d); }
+.btn.blue { background: linear-gradient(#73c0ff, var(--blue)); box-shadow: 0 6px 0 var(--blue-d), 0 10px 18px rgba(0,0,0,0.25); }
+.btn.blue:active { box-shadow: 0 1px 0 var(--blue-d); }
+.btn.big { font-size: 40px; padding: 16px 64px 20px; border-radius: 24px; }
+.btn.icon { width: 58px; height: 58px; padding: 0; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; }
+.btn.icon svg { width: 30px; height: 30px; }
+.btn.small { font-size: 20px; padding: 10px 18px 12px; border-radius: 14px; }
+.btn[disabled] { filter: grayscale(0.8) brightness(0.9); cursor: default; }
+.pulse { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+/* loading */
+#loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+  background: radial-gradient(circle at 50% 35%, #8fd2ff, #3f8de8 70%); z-index: 20; transition: opacity .5s; }
+#loading .logo-small { font-size: clamp(36px, 11vw, 64px); }
+#loading .bar { width: min(70vw, 420px); height: 22px; border-radius: 12px; background: rgba(0,0,0,0.25); overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+#loading .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffd23f, #ff9a2e); border-radius: 12px; transition: width .2s; }
+
+/* menu */
+#menu .logo { position: absolute; left: 50%; top: 12%; transform: translateX(-50%) rotate(-4deg); text-align: center; line-height: 0.85; white-space: nowrap; }
+#menu .logo .l1 { font-size: clamp(64px, 13vw, 132px); color: #fff; display: block; }
+#menu .logo .l2 { font-size: clamp(72px, 15vw, 152px); display: block; background: linear-gradient(#ffe36b, #ff9a2e); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 0 var(--stroke)) drop-shadow(2px 0 0 var(--stroke)) drop-shadow(-2px 0 0 var(--stroke)) drop-shadow(0 -2px 0 var(--stroke)) drop-shadow(0 8px 10px rgba(0,0,0,0.3)); }
+#menu .logo .l1 { text-shadow: 0 4px 0 var(--stroke), 3px 3px 0 var(--stroke), -3px 3px 0 var(--stroke), 3px -3px 0 var(--stroke), -3px -3px 0 var(--stroke), 0 10px 14px rgba(0,0,0,0.3); }
+#menu .actions { position: absolute; left: 50%; bottom: 11%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 18px; }
+#menu .row { display: flex; gap: 14px; }
+.topbar { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; display: flex; gap: 10px; align-items: center; }
+.coins { display: inline-flex; align-items: center; gap: 8px; background: rgba(29,35,64,0.55); border-radius: 30px; padding: 6px 16px 6px 6px; font-family: 'Lilita One'; font-size: 24px; }
+.coin { width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6b0, #ffd23f 45%, #e09a10); box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2), 0 2px 0 rgba(0,0,0,0.2); display: inline-block; position: relative; }
+.coin::after { content: ''; position: absolute; inset: 7px; border-radius: 50%; border: 2px solid rgba(160,100,0,0.45); }
+.badge { position: absolute; top: -8px; right: -8px; width: 26px; height: 26px; border-radius: 50%; background: var(--pink); font-family: 'Lilita One'; font-size: 17px; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 0 rgba(0,0,0,0.3); animation: pulse 1s infinite; }
+.badge.on { display: flex; }
+
+/* HUD */
+#hud .lvl { position: absolute; left: 14px; top: max(14px, env(safe-area-inset-top)); font-size: 28px; }
+#hud .progress { position: absolute; left: 50%; top: max(14px, env(safe-area-inset-top)); transform: translateX(-50%); width: min(46vw, 420px); }
+#hud .track { position: relative; height: 26px; border-radius: 14px; background: rgba(29,35,64,0.55); box-shadow: inset 0 2px 4px rgba(0,0,0,0.35); overflow: visible; }
+#hud .fill { position: absolute; left: 3px; top: 3px; bottom: 3px; width: 0; border-radius: 11px; background: linear-gradient(90deg, #ffd23f, #ff7a3d); transition: width .25s ease-out; }
+#hud .pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-start; padding-left: 12px; font-family: 'Lilita One'; font-size: 19px; }
+#hud .mark { position: absolute; top: 50%; width: 36px; height: 36px; margin: -18px 0 0 -18px; transition: transform .3s; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.35)); }
+#hud .mark.got { transform: scale(1.25); }
+#hud .balls { position: absolute; right: 84px; top: max(16px, env(safe-area-inset-top)); display: flex; gap: 6px; }
+#hud .balls i { width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #8a7dff, #2a2a9a 60%, #10104a); box-shadow: 0 2px 0 rgba(0,0,0,0.3); transition: transform .3s, opacity .3s; }
+#hud .balls i.used { opacity: 0.25; transform: scale(0.75); }
+#hud .pause { position: absolute; right: 12px; top: max(10px, env(safe-area-inset-top)); }
+#hint { position: absolute; left: 0; right: 0; top: 17%; text-align: center; font-size: 24px; opacity: 0; transition: opacity .4s; }
+#hint.on { opacity: 1; }
+#hint .keys { display: inline-flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 18px; }
+.key { display: inline-flex; min-width: 38px; height: 38px; padding: 0 10px; align-items: center; justify-content: center; border-radius: 9px; background: #fff; color: var(--ink); font-family: 'Lilita One'; font-size: 18px; box-shadow: 0 4px 0 #b7c0d8; text-shadow: none; }
+#hand { position: absolute; width: 84px; height: 84px; margin-left: -20px; margin-top: -6px; display: none; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35)); }
+#hand.on { display: block; animation: handDrag 1.9s ease-in-out infinite; }
+@keyframes handDrag { 0% { transform: translate(0,0) scale(1); opacity: 0; } 12% { opacity: 1; transform: translate(0,0) scale(0.9); } 55% { transform: translate(-26px, 120px) scale(0.9); } 70% { transform: translate(-26px,120px) scale(1); opacity: 1; } 100% { transform: translate(-26px,120px) scale(1.05); opacity: 0; } }
+#banner { position: absolute; left: 50%; top: 34%; transform: translate(-50%,-50%); font-size: clamp(56px, 11vw, 110px); white-space: nowrap; pointer-events: none; opacity: 0; }
+#banner.show { animation: bannerIn 1.5s cubic-bezier(.2,1.6,.4,1) forwards; }
+@keyframes bannerIn { 0% { opacity: 0; transform: translate(-50%,-50%) scale(0.2) rotate(-10deg); } 18% { opacity: 1; transform: translate(-50%,-50%) scale(1.12) rotate(-4deg); } 30% { transform: translate(-50%,-50%) scale(1) rotate(-4deg); } 80% { opacity: 1; transform: translate(-50%,-50%) scale(1.02) rotate(-4deg); } 100% { opacity: 0; transform: translate(-50%,-62%) scale(0.9) rotate(-4deg); } }
+.pop { position: absolute; font-family: 'Lilita One'; font-size: 30px; pointer-events: none; animation: popUp 1s ease-out forwards; white-space: nowrap; }
+@keyframes popUp { 0% { transform: translate(-50%, 0) scale(0.4); opacity: 0; } 20% { transform: translate(-50%, -16px) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -70px) scale(1); opacity: 0; } }
+
+/* panels */
+.dim { position: absolute; inset: 0; background: rgba(15, 24, 60, 0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.panel { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(92vw, 560px); max-height: 92vh; overflow: auto; text-align: center;
+  background: linear-gradient(#ffffff, #eef4ff); color: var(--ink); border-radius: 30px; padding: 26px 24px 30px; box-shadow: 0 10px 0 #b9c7e8, 0 24px 50px rgba(0,0,0,0.35); pointer-events: auto; }
+.panel h2 { margin: 0 0 10px; font-family: 'Lilita One'; font-weight: 400; font-size: 44px; color: #fff; }
+.panel .ribbon { display: inline-block; margin-top: -60px; padding: 10px 34px 14px; border-radius: 18px; background: linear-gradient(#ff8bb0, var(--pink)); box-shadow: 0 6px 0 #c93a68; }
+.panel .ribbon.green { background: linear-gradient(#5fe388, var(--green)); box-shadow: 0 6px 0 var(--green-d); }
+.panel .ribbon.blue { background: linear-gradient(#73c0ff, var(--blue)); box-shadow: 0 6px 0 var(--blue-d); }
+.panel .btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+.panel.in { animation: panelIn .45s cubic-bezier(.2,1.5,.4,1); }
+@keyframes panelIn { 0% { transform: translate(-50%,-40%) scale(0.7); opacity: 0; } 100% { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+.stars { display: flex; justify-content: center; align-items: flex-end; gap: 6px; margin: 10px 0 6px; height: 120px; }
+.stars svg { width: 96px; height: 96px; transform: scale(0); }
+.stars svg:nth-child(2) { width: 118px; height: 118px; margin-bottom: 8px; }
+.stars svg.on { animation: starIn .5s cubic-bezier(.2,1.8,.4,1) forwards; }
+.stars svg.off { transform: scale(1); opacity: 1; }
+@keyframes starIn { 0% { transform: scale(0) rotate(-90deg); } 100% { transform: scale(1) rotate(0); } }
+.result-line { font-family: 'Lilita One'; font-size: 26px; display: flex; justify-content: center; align-items: center; gap: 10px; margin: 6px 0; }
+.result-line.pct { font-size: 40px; color: var(--orange-d); }
+
+/* level grid */
+.grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 8px; }
+.lvbtn { font-family: 'Lilita One'; font-size: 28px; color: #fff; border: 0; border-radius: 16px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: linear-gradient(#73c0ff, var(--blue)); box-shadow: 0 5px 0 var(--blue-d); text-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.lvbtn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--blue-d); }
+.lvbtn.locked { background: linear-gradient(#c9d1e6, #a9b3cf); box-shadow: 0 5px 0 #8590ad; cursor: default; }
+.lvbtn .s { display: flex; gap: 1px; }
+.lvbtn .s svg { width: 15px; height: 15px; }
+
+/* shop */
+.shopgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px; }
+.card { background: #fff; border-radius: 20px; padding: 10px 8px 12px; box-shadow: 0 5px 0 #d2dcf2; display: flex; flex-direction: column; align-items: center; gap: 4px; border: 3px solid transparent; }
+.card.sel { border-color: var(--green); }
+.card img { width: 88%; aspect-ratio: 1; object-fit: contain; }
+.card .nm { font-family: 'Lilita One'; font-size: 19px; }
+.card .meter { display: flex; align-items: center; gap: 6px; font-size: 12px; width: 100%; padding: 0 6px; }
+.card .meter b { flex: 1; height: 8px; border-radius: 5px; background: #e2e8f5; overflow: hidden; }
+.card .meter b i { display: block; height: 100%; background: linear-gradient(90deg, var(--orange), var(--pink)); }
+.card .btn { font-size: 16px; padding: 8px 10px 10px; border-radius: 12px; width: 100%; margin-top: 4px; display: inline-flex; gap: 6px; align-items: center; justify-content: center; }
+.card .btn .coin { width: 20px; height: 20px; }
+.card .btn .coin::after { inset: 4px; }
+.close { position: absolute; right: 14px; top: 14px; }
+.toggles { display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
+.btn.off { filter: grayscale(1) brightness(0.85); }
+
+#wipe { position: fixed; inset: 0; background: #3f8de8; z-index: 15; pointer-events: none; clip-path: circle(0% at 50% 50%); }
+#wipe.close { animation: wipeClose .38s ease-in forwards; }
+#wipe.open { animation: wipeOpen .45s ease-out forwards; }
+@keyframes wipeClose { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(75% at 50% 50%); } }
+@keyframes wipeOpen { from { clip-path: circle(75% at 50% 50%); } to { clip-path: circle(0% at 50% 50%); } }
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 12; width: 100%; height: 100%; }
+#toast { position: absolute; left: 50%; bottom: 14%; transform: translateX(-50%); background: rgba(29,35,64,0.85); padding: 10px 22px; border-radius: 30px; font-size: 20px; opacity: 0; transition: opacity .3s; }
+#toast.on { opacity: 1; }
+
+@media (max-width: 600px), (max-height: 520px) {
+  .btn { font-size: 22px; padding: 12px 24px 14px; }
+  .btn.big { font-size: 32px; padding: 14px 48px 18px; }
+  .btn.icon { width: 50px; height: 50px; }
+  #hud .lvl { font-size: 22px; }
+  #hud .progress { top: 64px; width: min(80vw, 420px); }
+  #hud .balls { right: 74px; }
+  #hud .balls i { width: 24px; height: 24px; }
+  .panel { padding: 22px 16px 24px; }
+  .panel h2 { font-size: 34px; }
+  .grid { gap: 9px; }
+  .lvbtn { font-size: 22px; border-radius: 12px; }
+  .shopgrid { gap: 8px; }
+  .card .nm { font-size: 16px; }
+  .coins { font-size: 20px; }
+  #hint { font-size: 20px; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  #hud .progress { top: 14px; width: min(40vw, 360px); }
+  #menu .logo { top: 6%; }
+  #menu .logo .l1 { font-size: 56px; } #menu .logo .l2 { font-size: 66px; }
+  #menu .actions { bottom: 6%; gap: 12px; }
+  .stars { height: 80px; } .stars svg { width: 64px; height: 64px; } .stars svg:nth-child(2) { width: 78px; height: 78px; }
+}
+</style>
+</head>
+<body>
+<canvas id="game" tabindex="0"></canvas>
+
+<div id="loading">
+  <div class="logo-small title-font outline">STRIKE CITY</div>
+  <div class="bar"><i id="loadbar"></i></div>
+</div>
+
+<div class="ui" id="ui">
+  <!-- menu -->
+  <div class="layer" id="menu">
+    <div class="topbar">
+      <span class="coins"><span class="coin"></span><span class="coinval">0</span></span>
+      <button class="btn icon blue" data-act="all" aria-label="Sound"></button>
+    </div>
+    <div class="logo title-font"><span class="l1">STRIKE</span><span class="l2">CITY</span></div>
+    <div class="actions">
+      <button class="btn big pulse" data-act="play" data-t="play">PLAY</button>
+      <div class="row">
+        <button class="btn blue" data-act="levels" data-t="levels">LEVELS</button>
+        <button class="btn orange" data-act="shop" style="position:relative"><span data-t="balls">BALLS</span><span class="badge" id="shopBadge">!</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- in-game HUD -->
+  <div class="layer" id="hud">
+    <div class="lvl title-font outline" id="lvlLabel">LEVEL 1</div>
+    <div class="progress">
+      <div class="track"><div class="fill" id="fill"></div><div class="pct title-font outline" id="pct">0%</div>
+        <svg class="mark" id="m0" viewBox="0 0 24 24"></svg><svg class="mark" id="m1" viewBox="0 0 24 24"></svg><svg class="mark" id="m2" viewBox="0 0 24 24"></svg>
+      </div>
+    </div>
+    <div class="balls" id="ballsLeft"></div>
+    <button class="btn icon blue pause" data-act="pause" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1.5" fill="#fff"/><rect x="14" y="4" width="4" height="16" rx="1.5" fill="#fff"/></svg></button>
+    <div id="hint" class="outline title-font"><div id="hintText"></div><div class="keys" id="hintKeys"><span class="key">←</span><span class="key">→</span><span>+</span><span class="key">SPACE</span></div></div>
+    <svg id="hand" viewBox="0 0 64 64"><path d="M26 30V10a5 5 0 0 1 10 0v16l2-1a5 5 0 0 1 6 2l1 1a5 5 0 0 1 6 3v12c0 9-6 15-15 15h-3c-6 0-10-3-13-8l-7-12a4 4 0 0 1 6-5l7 7z" fill="#fff" stroke="#1d2340" stroke-width="3" stroke-linejoin="round"/></svg>
+    <div id="banner" class="title-font outline"></div>
+    <div id="pops"></div>
+  </div>
+
+  <!-- results -->
+  <div class="layer" id="result">
+    <div class="dim"></div>
+    <div class="panel">
+      <div class="ribbon green" id="resRibbon"><h2 id="resTitle">LEVEL COMPLETE</h2></div>
+      <div class="stars" id="resStars"></div>
+      <div class="result-line pct" id="resPct">0%</div>
+      <div class="result-line"><span class="coin"></span><span id="resCoins">+0</span></div>
+      <div class="btns">
+        <button class="btn icon blue" data-act="menu" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z" fill="#fff"/></svg></button>
+        <button class="btn orange" data-act="retry" data-t="retry">RETRY</button>
+        <button class="btn" data-act="next" data-t="next" id="nextBtn">NEXT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- level select -->
+  <div class="layer" id="levels">
+    <div class="dim clickable" data-act="close"></div>
+    <div class="panel">
+      <div class="ribbon blue"><h2 data-t="levels">LEVELS</h2></div>
+      <button class="btn icon orange close" data-act="close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg></button>
+      <div class="grid" id="levelGrid"></div>
+    </div>
+  </div>
+
+  <!-- shop -->
+  <div class="layer" id="shop">
+    <div class="dim clickable" data-act="close"></div>
+    <div class="panel">
+      <div class="ribbon"><h2 data-t="balls">BALLS</h2></div>
+      <button class="btn icon orange close" data-act="close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg></button>
+      <div class="coins" style="margin: 10px auto 8px; color:#fff; display:flex; width:fit-content"><span class="coin"></span><span class="coinval">0</span></div>
+      <div class="shopgrid" id="shopGrid"></div>
+    </div>
+  </div>
+
+  <!-- pause -->
+  <div class="layer" id="pause">
+    <div class="dim"></div>
+    <div class="panel">
+      <div class="ribbon blue"><h2 data-t="paused">PAUSED</h2></div>
+      <div class="btns" style="flex-direction:column; align-items:center">
+        <button class="btn big" data-act="resume" data-t="resume">RESUME</button>
+        <div class="toggles">
+          <button class="btn icon blue" data-act="menu" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z" fill="#fff"/></svg></button>
+          <button class="btn icon orange" data-act="retry" aria-label="Retry"><svg viewBox="0 0 24 24"><path d="M19 12a7 7 0 1 1-2.1-5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M18 3v5h-5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="btn icon blue" data-act="music" aria-label="Music"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12" stroke="#fff" stroke-width="2.5" fill="none" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="3" fill="#fff"/><circle cx="17.5" cy="16" r="3" fill="#fff"/></svg></button>
+          <button class="btn icon blue" data-act="sound" aria-label="Sound"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+<canvas id="confetti"></canvas>
+<div id="wipe"></div>
+<script src="game.js"></script>
+</body>
+</html>
