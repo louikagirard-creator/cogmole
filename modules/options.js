@@ -55,8 +55,9 @@
   }
   G.on('boot', () => { lire(); appliquer(); });
 
-  // ---------- plein écran (Poki fournit déjà le sien : pas de bouton là-bas) ----------
-  const fsPossible = () => G.PLATFORM !== 'poki' && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  // ---------- plein écran ----------
+  // Poki et CrazyGames fournissent le leur (CrazyGames interdit un bouton maison) : seulement sur la version web
+  const fsPossible = () => G.PLATFORM !== 'poki' && !window.CrazyGames && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
   const enPlein = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
   function basculerPlein() {
     try {

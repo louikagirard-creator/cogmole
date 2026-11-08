@@ -10,6 +10,10 @@ let adPlaying = false;
 const DEV = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || location.protocol === 'file:';
 // The platform is picked by which SDK script index.html loaded.
 const PLATFORM = window.PokiSDK ? 'poki' : 'crazygames';
+// CrazyGames « Basic Launch » : les pubs y sont désactivées, et un bouton de pub récompensée sans effet
+// fait refuser le jeu. On n'appelle donc aucune pub CrazyGames tant que le jeu n'est pas en Full Launch.
+// Passer à true quand CrazyGames sélectionne le jeu pour le Full Launch.
+let CG_ADS = false;
 const SDK = {
   cg: null, poki: null, gameplay: false, adsOff: false, interacted: false, pendingStart: false, lastMidgame: 0,
   async init() {
@@ -50,6 +54,7 @@ const SDK = {
   happytime() { this.safe(c => c.game.happytime()); },
   // type: 'midgame' (CrazyGames midgame / Poki commercialBreak) or 'rewarded'. Resolves true only if the ad was watched.
   ad(type) {
+    if (this.cg && !this.poki && !CG_ADS) return Promise.resolve(false);   // Basic Launch : aucune pub, le jeu continue tout de suite
     // safety delay: never two midgames within a minute (Poki also throttles on its side)
     if (type === 'midgame' && PLATFORM !== 'poki' && performance.now() - this.lastMidgame < 60000 && this.lastMidgame) return Promise.resolve(false);
     if (type === 'midgame') this.lastMidgame = performance.now();
@@ -97,7 +102,7 @@ function refreshAudio() { if (!actx) return; if (silent() || ducked || adPlaying
 function onAdStart() { adPlaying = true; keys.clear(); joy = null; }
 function onAdEnd() { adPlaying = false; ducked = false; refreshAudio(); lastFrame = performance.now(); }
 // rewarded offers are only shown when an ad can actually play (hidden with adblock / ads disabled)
-const rewardedOK = () => (SDK.poki || SDK.cg ? !SDK.adsOff : DEV);
+const rewardedOK = () => (SDK.poki ? !SDK.adsOff : SDK.cg ? CG_ADS && !SDK.adsOff : DEV);
 
 // ============================================================
 //  Helpers
@@ -1525,8 +1530,11 @@ function L(str, vars) {   // translate a UI string (English key) and fill {place
 }
 function detectLang() {
   const cands = [];
-  try { if (SDK.cg && SDK.cg.user && SDK.cg.user.systemInfo) cands.push(SDK.cg.user.systemInfo.locale); } catch (e) {}
-  try { cands.push(...(navigator.languages || []), navigator.language); } catch (e) {}
+  // CrazyGames impose la langue donnée par son SDK (systemInfo), sinon l'anglais
+  let cgLocale = null;
+  try { if (SDK.cg && SDK.cg.user && SDK.cg.user.systemInfo) cgLocale = SDK.cg.user.systemInfo.locale; } catch (e) {}
+  if (cgLocale) cands.push(cgLocale);
+  else try { cands.push(...(navigator.languages || []), navigator.language); } catch (e) {}
   for (const c of cands) { const k = String(c || '').slice(0, 2).toLowerCase(); if (LANGS.includes(k)) return k; }
   return 'en';
 }
@@ -1657,8 +1665,10 @@ function drawHud() {
 function drawTutorial() {
   if (!tut || state !== 'play' || !p || p.dead) return;
   const touch = isTouch();
+  // lettres réelles du clavier quand le navigateur donne la disposition (ZQSD en AZERTY)
+  const fleches = layoutMap ? L('ARROWS OR WASD').replace(/WASD|ZQSD/, moveLetters()) : 'ARROWS OR WASD';
   const lines = [
-    [touch ? 'DRAG DOWN TO DIG' : 'HOLD DOWN TO DIG', touch ? 'DRAG ANYWHERE ON THE SCREEN' : 'ARROWS OR WASD'],
+    [touch ? 'DRAG DOWN TO DIG' : 'HOLD DOWN TO DIG', touch ? 'DRAG ANYWHERE ON THE SCREEN' : fleches],
     [touch ? 'DRAG LEFT OR RIGHT' : 'PUSH LEFT OR RIGHT', 'INTO A WALL TO DIG SIDEWAYS'],
     ['GRAB SHINY ORE!', 'WATCH YOUR FUEL GAUGE'],
     [touch ? 'DRAG UP TO FLY' : 'HOLD UP TO FLY', 'GO BACK TO BASE AND SELL'],
@@ -1996,7 +2006,9 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => keys.delete(e.code));
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('wheel', e => e.preventDefault(), { passive: false });
-addEventListener('blur', () => { keys.clear(); joy = null; pause(true); });
+// Perte du focus : pause, mais seulement après la première action du joueur. Sinon, sur les portails,
+// la page hôte qui reprend le focus au chargement ferait démarrer le jeu sur l'écran de pause.
+addEventListener('blur', () => { keys.clear(); joy = null; if (SDK.interacted) pause(true); });
 addEventListener('pointermove', e => {
   ui.mx = e.clientX / S; ui.my = e.clientY / S;
   const b = hitButton(ui.mx, ui.my), nh = b && !b.disabled ? b.id : null;
@@ -2085,10 +2097,15 @@ function update(dt) {
 // Écrans ajoutés par les modules : SCREENS[nom] = { draw(dt), hud: true pour garder le HUD derrière }.
 // Un écran de module met le jeu en pause : le monde n'est mis à jour que dans l'état 'play'.
 const SCREENS = {};
+// Disposition du clavier du joueur (AZERTY : KeyW s'affiche Z), quand le navigateur la donne
+let layoutMap = null;
+try { if (navigator.keyboard && navigator.keyboard.getLayoutMap) navigator.keyboard.getLayoutMap().then(m => { layoutMap = m; }, () => {}); } catch (e) {}
+// Lettres de déplacement réellement imprimées sur le clavier (WASD, ZQSD...)
+const moveLetters = () => ['KeyW', 'KeyA', 'KeyS', 'KeyD'].map(keyName).join('');
 // Nom affichable d'une touche (KeyE -> E, ArrowUp -> HAUT...)
 function keyName(code) {
   if (!code) return '-';
-  if (code.startsWith('Key')) return code.slice(3);
+  if (code.startsWith('Key')) return (layoutMap && layoutMap.get(code) || code.slice(3)).toUpperCase();
   if (code.startsWith('Digit')) return code.slice(5);
   if (code.startsWith('Numpad')) return L('PAV') + code.slice(6);
   const named = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Space: 'SPACE', Enter: 'ENTER', Tab: 'TAB', Escape: 'ESC',
